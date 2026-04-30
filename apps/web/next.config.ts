@@ -32,15 +32,9 @@ const nextConfig: NextConfig = {
         : false,
   },
 
-  // Experimental features
+  // Turbopack compatibility (Next.js 16)
   experimental: {
-    // Optimize CSS (requires critters package if enabled)
-    // optimizeCss: true,
-  },
-
-  // Webpack fallback (disable Turbopack-related issues)
-  webpack(config) {
-    return config;
+    turbopack: {},
   },
 };
 
