@@ -1,3 +1,9 @@
+[project]
+name = "coreai-api"
+version = "1.0.0"
+requires-python = ">=3.12"
+dependencies = []
+
 [tool.poetry]
 name = "coreai-api"
 version = "1.0.0"
