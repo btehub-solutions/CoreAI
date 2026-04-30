@@ -32,10 +32,6 @@ const nextConfig: NextConfig = {
         : false,
   },
 
-  // Turbopack compatibility (Next.js 16)
-  experimental: {
-    turbopack: {},
-  },
 };
 
 export default nextConfig;
