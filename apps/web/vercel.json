@@ -6,7 +6,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://your-backend-url.vercel.app/api/:path*"
+      "destination": "https://coreaibms.vercel.app/api/:path*"
     }
   ],
   "headers": [
