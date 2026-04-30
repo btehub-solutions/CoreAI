@@ -2,7 +2,7 @@ import axios, { AxiosError, InternalAxiosRequestConfig } from "axios"
 import { useAuthStore } from "@/store/auth.store"
 
 const apiClient = axios.create({
-  baseURL: process.env.NEXT_PUBLIC_API_URL,
+  baseURL: "",
   timeout: 15000,
   headers: {
     "Content-Type": "application/json",
@@ -39,7 +39,7 @@ apiClient.interceptors.response.use(
       }
       
       try {
-        const response = await axios.post(`${process.env.NEXT_PUBLIC_API_URL}/api/v1/auth/refresh`, {
+        const response = await axios.post("/api/v1/auth/refresh", {
           refresh_token: refreshToken
         })
         
