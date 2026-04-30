@@ -1,0 +1,19 @@
+{
+  "name": "coreai-monorepo",
+  "private": true,
+  "description": "CoreAI - Next.js Frontend & FastAPI Backend Monorepo",
+  "scripts": {
+    "dev:web": "pnpm --filter web dev",
+    "dev:api": "cd services/api && python -m uvicorn app.main:app --reload",
+    "build:web": "pnpm --filter web build",
+    "build:api": "echo 'Backend is serverless-ready via services/api/api/index.py'",
+    "lint": "pnpm --filter web lint",
+    "db:migrate": "cd services/api && alembic upgrade head",
+    "db:makemigrations": "cd services/api && alembic revision --autogenerate",
+    "docker:up": "docker-compose up",
+    "docker:down": "docker-compose down"
+  },
+  "devDependencies": {
+    "pnpm": "^9.0.0"
+  }
+}
