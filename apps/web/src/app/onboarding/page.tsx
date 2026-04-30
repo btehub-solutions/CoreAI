@@ -132,7 +132,7 @@ export default function OnboardingPage() {
               </Button>
             </div>
           </div>
-        ) : (
+        ) : step === 2 ? (
           <div className="max-w-sm mx-auto space-y-6">
             {/* Sector confirmation card */}
             <div className="bg-[#0d1f17] border border-emerald-500/20 rounded-2xl p-4 flex items-center gap-4">
