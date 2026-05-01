@@ -10,25 +10,28 @@ from app.config import settings
 # is more efficient, so we switch based on the environment flag.
 _pool_class = NullPool if settings.is_production else AsyncAdaptedQueuePool
 
-engine = create_async_engine(
-    settings.database_url,
-    echo=settings.debug,
-    poolclass=_pool_class,
-    # These only apply when NOT using NullPool (i.e., local dev)
-    **(
-        {}
-        if settings.is_production
-        else {
-            "pool_size": 5,
-            "max_overflow": 10,
-            "pool_pre_ping": True,
-        }
-    ),
-)
+if settings.database_url:
+    engine = create_async_engine(
+        settings.database_url,
+        echo=settings.debug,
+        poolclass=_pool_class,
+        **(
+            {}
+            if settings.is_production
+            else {
+                "pool_size": 5,
+                "max_overflow": 10,
+                "pool_pre_ping": True,
+            }
+        ),
+    )
 
-AsyncSessionLocal = async_sessionmaker(
-    engine, class_=AsyncSession, expire_on_commit=False
-)
+    AsyncSessionLocal = async_sessionmaker(
+        engine, class_=AsyncSession, expire_on_commit=False
+    )
+else:
+    engine = None
+    AsyncSessionLocal = None
 
 
 class Base(DeclarativeBase):
@@ -36,6 +39,8 @@ class Base(DeclarativeBase):
 
 
 async def get_db():
+    if AsyncSessionLocal is None:
+        raise Exception("DATABASE_URL is not configured in environment variables.")
     async with AsyncSessionLocal() as session:
         try:
             yield session

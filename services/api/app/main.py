@@ -7,16 +7,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
-    logger.info("CoreAI API starting")
-    yield
-    logger.info("CoreAI API shutting down")
-
 app = FastAPI(
     title="CoreAI API",
     version="1.0.0",
-    lifespan=lifespan,
     docs_url="/docs" if settings.debug else None,
     redoc_url=None,
 )
