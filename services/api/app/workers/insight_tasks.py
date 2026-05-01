@@ -1,4 +1,24 @@
+import os
 from app.workers.celery_app import celery_app
+
+if celery_app is None:
+    class DummyCeleryApp:
+        def task(self, *args, **kwargs):
+            def decorator(func):
+                return func
+            return decorator
+        def send_task(self, *args, **kwargs):
+            pass
+    celery_app = DummyCeleryApp()
+
+def refresh_insights(business_id: str) -> None:
+    if os.getenv("ENVIRONMENT") == "production":
+        return
+    if getattr(celery_app, "send_task", None):
+        celery_app.send_task(
+            "app.workers.insight_tasks._refresh_insights_task",
+            args=[business_id]
+        )
 
 @celery_app.task(bind=True, max_retries=3)
 def send_daily_briefs_all(self) -> None:

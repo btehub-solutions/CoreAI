@@ -121,7 +121,7 @@ def upgrade() -> None:
                existing_nullable=False)
 
     with op.batch_alter_table('users', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('role', sa.Enum('OWNER', 'CASHIER', name='userrole'), nullable=False, server_default='owner'))
+        batch_op.add_column(sa.Column('role', sa.Enum('owner', 'cashier', name='userrole'), nullable=False, server_default='owner'))
         batch_op.add_column(sa.Column('business_id', app.models.base.GUID(), nullable=True))
         batch_op.alter_column('id',
                existing_type=sa.NUMERIC(),

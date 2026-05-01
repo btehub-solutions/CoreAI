@@ -60,7 +60,7 @@ def upgrade() -> None:
                existing_nullable=False)
 
     with op.batch_alter_table('users', schema=None) as batch_op:
-        batch_op.add_column(sa.Column('daily_brief_email_enabled', sa.Boolean(), nullable=False, server_default=sa.text('0')))
+        batch_op.add_column(sa.Column('daily_brief_email_enabled', sa.Boolean(), nullable=False, server_default=sa.text('false')))
         batch_op.add_column(sa.Column('daily_brief_opted_in_at', sa.DateTime(), nullable=True))
 
     # ### end Alembic commands ###

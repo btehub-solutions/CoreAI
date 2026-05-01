@@ -74,19 +74,8 @@ export function AIChatPanel() {
                   && i === messages.length - 1
                   && msg.role === "assistant"
                   && msg.content === "" && (
-                  <span className="inline-flex gap-1 ml-1">
-                    {[0, 1, 2].map((j) => (
-                      <motion.span
-                        key={j}
-                        className="h-1.5 w-1.5 rounded-full bg-gray-500"
-                        animate={{ opacity: [0.3, 1, 0.3] }}
-                        transition={{
-                          duration: 1,
-                          repeat: Infinity,
-                          delay: j * 0.2,
-                        }}
-                      />
-                    ))}
+                  <span className="text-gray-500 italic text-xs ml-1">
+                    CoreAI is thinking...
                   </span>
                 )}
               </div>

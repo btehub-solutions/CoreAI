@@ -1,46 +1,32 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
 from functools import lru_cache
-from typing import List, Optional
-
+from typing import List
+import json
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
         env_file=".env",
-        case_sensitive=False,
-        # Also read from actual environment variables (Vercel injects these)
-        env_ignore_empty=True,
+        case_sensitive=False
     )
 
-    # Application
     app_name: str = "CoreAI"
     environment: str = "development"
     debug: bool = False
-
-    # Security — REQUIRED: must be set in Vercel dashboard
-    secret_key: str
-
-    # CORS
+    secret_key: str = "dev-secret-key"
     allowed_origins: List[str] = ["http://localhost:3000"]
 
-    # Database — REQUIRED
-    database_url: str
+    database_url: str = ""
+    redis_url: str = ""
 
-    # Redis — OPTIONAL (cache degrades gracefully without it)
-    redis_url: Optional[str] = None
-
-    # Token expiry
     access_token_expire_minutes: int = 30
     refresh_token_expire_days: int = 7
 
-    # AI
     gemini_api_key: str = ""
-    anthropic_api_key: str = ""
-    ai_model: str = "gemini-2.0-flash"
+    ai_model: str = "gemini-1.5-flash"
 
-    # Email (all optional)
     mail_username: str = ""
     mail_password: str = ""
-    mail_from: str = "noreply@coreai.com"
+    mail_from: str = "noreply@coreai.app"
     mail_from_name: str = "CoreAI"
     mail_server: str = "smtp.gmail.com"
     mail_port: int = 587
@@ -51,14 +37,9 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.environment == "production"
 
-    @property
-    def is_development(self) -> bool:
-        return self.environment == "development"
-
-
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
 
-
 settings = get_settings()
+

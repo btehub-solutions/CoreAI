@@ -119,7 +119,6 @@ async def get_tomorrow_brief(
 @router.post("/chat")
 async def chat(
     payload: dict,
-    request: Request,
     current_user: User = Depends(get_owner),
     business: Business = Depends(get_current_business),
     db: AsyncSession = Depends(get_db),
@@ -128,31 +127,25 @@ async def chat(
     history = payload.get("history", [])
 
     if not message:
-        raise HTTPException(status_code=400, detail="Message cannot be empty")
+        raise HTTPException(
+            status_code=400,
+            detail="Message cannot be empty"
+        )
 
     ai = AIService(db)
-
-    async def event_stream():
-        try:
-            async for token in ai.stream_chat(business.id, message, history):
-                if await request.is_disconnected():
-                    break
-                yield f"data: {json.dumps({'token': token})}\n\n"
-            yield "data: [DONE]\n\n"
-        except Exception:
-            yield f"data: {json.dumps({'error': 'Stream interrupted'})}\n\n"
-            yield "data: [DONE]\n\n"
-
-    return StreamingResponse(
-        event_stream(),
-        media_type="text/event-stream",
-        headers={
-            "Cache-Control": "no-cache, no-transform",
-            "X-Accel-Buffering": "no",
-            "Connection": "keep-alive",
-            "Transfer-Encoding": "chunked",
-        },
-    )
+    try:
+        response_text = await ai.chat(
+            business.id, message, history
+        )
+        return ApiResponse(data={
+            "message": response_text,
+            "role": "assistant",
+        })
+    except Exception as e:
+        raise HTTPException(
+            status_code=500,
+            detail="AI service temporarily unavailable"
+        )
 
 
 @router.get("/alerts")
