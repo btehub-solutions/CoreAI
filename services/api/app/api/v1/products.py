@@ -5,7 +5,6 @@ from sqlalchemy import select, update, func, or_
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
-import pandas as pd
 from google import genai
 from google.genai import types
 import asyncio
@@ -138,27 +137,25 @@ async def preview_csv_import(
 
     contents = await file.read()
     try:
-        # Try UTF-8 first, then try with BOM, then try latin-1
+        decoded = contents.decode("utf-8-sig")
+    except UnicodeDecodeError:
         try:
-            df = pd.read_csv(io.BytesIO(contents))
-        except UnicodeDecodeError:
-            try:
-                df = pd.read_csv(io.BytesIO(contents), encoding="utf-8-sig")
-            except UnicodeDecodeError:
-                df = pd.read_csv(io.BytesIO(contents), encoding="latin-1")
-    except Exception as e:
-        raise HTTPException(status_code=400,
-                            detail=f"Could not read CSV file: {str(e)}")
+            decoded = contents.decode("latin-1")
+        except Exception as e:
+            raise HTTPException(status_code=400, detail=f"Could not decode CSV file: {str(e)}")
+            
+    csv_reader = csv.DictReader(io.StringIO(decoded))
+    rows = list(csv_reader)
 
-    if df.empty:
+    if not rows:
         raise HTTPException(status_code=400, detail="CSV file is empty")
 
-    if len(df) > 1000:
+    if len(rows) > 1000:
         raise HTTPException(status_code=400,
                             detail="Maximum 1000 products per import")
 
-    columns = df.columns.tolist()
-    sample = df.head(3).to_dict(orient="records")
+    columns = list(rows[0].keys())
+    sample = rows[:3]
 
     client = genai.Client(api_key=settings.gemini_api_key)
     prompt = f"""
@@ -230,13 +227,13 @@ Rules:
     preview_rows = []
     errors = []
 
-    for idx, row in df.iterrows():
+    for idx, row in enumerate(rows):
         mapped_row = {}
         row_error = None
 
         for csv_col, schema_field in mapping.items():
             value = row.get(csv_col)
-            if pd.isna(value):
+            if value is None or str(value).strip() == "":
                 mapped_row[schema_field] = None
                 continue
 
