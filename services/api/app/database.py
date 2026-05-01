@@ -10,9 +10,13 @@ from app.config import settings
 # is more efficient, so we switch based on the environment flag.
 _pool_class = NullPool if settings.is_production else AsyncAdaptedQueuePool
 
-if settings.database_url:
+db_url = settings.database_url
+if db_url and db_url.startswith("postgresql://"):
+    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+
+if db_url:
     engine = create_async_engine(
-        settings.database_url,
+        db_url,
         echo=settings.debug,
         poolclass=_pool_class,
         **(
