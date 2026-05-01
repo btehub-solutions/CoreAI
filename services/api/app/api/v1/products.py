@@ -21,7 +21,7 @@ from app.models.business import Business
 from app.models.user import User
 from app.schemas.product import (
     ProductCreate, ProductUpdate, ProductResponse, 
-    StockAdjustmentRequest, ConfirmImportRequest
+    StockAdjustmentRequest
 )
 from app.schemas.common import ApiResponse, PaginatedResponse, Meta
 from app.dependencies import get_current_business, get_owner, get_any_staff
