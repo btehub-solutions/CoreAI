@@ -14,15 +14,16 @@ class Settings(BaseSettings):
     environment: str = "development"
     debug: bool = False
     secret_key: str = "dev-secret-key"
-    allowed_origins: List[str] = ["http://localhost:3000"]
+    allowed_origins: List[str] | str = ["http://localhost:3000"]
 
     @field_validator("allowed_origins", mode="before")
     @classmethod
     def assemble_cors_origins(cls, v: str | List[str]) -> List[str]:
         if isinstance(v, str):
+            if not v or v.strip() == "":
+                return []
             if not v.startswith("["):
-                return [i.strip() for i in v.split(",")]
-            import json
+                return [i.strip() for i in v.split(",") if i.strip()]
             try:
                 return json.loads(v)
             except Exception:
