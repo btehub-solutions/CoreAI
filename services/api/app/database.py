@@ -10,7 +10,9 @@ from app.config import settings
 # is more efficient, so we switch based on the environment flag.
 _pool_class = NullPool if settings.is_production else AsyncAdaptedQueuePool
 
-db_url = settings.database_url
+import os
+
+db_url = settings.database_url or os.getenv("POSTGRES_URL") or os.getenv("POSTGRES_PRISMA_URL")
 if db_url:
     # Handle the pgbouncer=true parameter which asyncpg doesn't recognize
     if "pgbouncer=true" in db_url.lower():
@@ -28,6 +30,7 @@ if db_url:
         connect_args={
             "statement_cache_size": 0,
             "prepared_statement_cache_size": 0,
+            "prepared_statement_name_func": lambda name: None,
         },
         **(
             {}
