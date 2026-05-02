@@ -35,12 +35,13 @@ export function useAIChat() {
         }
         return updated
       })
-    } catch {
+    } catch (error: any) {
+      const detail = error.response?.data?.detail || "I could not process that right now. Please try again."
       setMessages((prev) => {
         const updated = [...prev]
         updated[updated.length - 1] = {
           role: "assistant",
-          content: "I could not process that right now. Please try again.",
+          content: detail,
         }
         return updated
       })
