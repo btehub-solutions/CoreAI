@@ -10,7 +10,7 @@ import { useRole } from "@/hooks/useRole"
 import { 
   Squares2X2Icon as DashboardIcon, 
   ShoppingBagIcon as ProductsIcon, 
-  CurrencyDollarIcon as SalesIcon, 
+  ShoppingCartIcon as SalesIcon, 
   ReceiptPercentIcon as ExpensesIcon, 
   ArrowPathIcon as RefundsIcon, 
   UsersIcon as StaffIcon, 
@@ -26,7 +26,7 @@ import apiClient from "@/lib/api-client"
 import { 
   Squares2X2Icon as DashboardIconSolid, 
   ShoppingBagIcon as ProductsIconSolid, 
-  CurrencyDollarIcon as SalesIconSolid, 
+  ShoppingCartIcon as SalesIconSolid, 
   ReceiptPercentIcon as ExpensesIconSolid, 
   ArrowPathIcon as RefundsIconSolid, 
   UsersIcon as StaffIconSolid, 
