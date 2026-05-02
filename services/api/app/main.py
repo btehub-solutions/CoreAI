@@ -1,11 +1,16 @@
-from contextlib import asynccontextmanager
 import sys
+import os
 import traceback
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse
 
+# Inject current directory into sys.path for Vercel module resolution
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))
+sys.path.append(os.getcwd())
+
 app = FastAPI(title="CoreAI API", version="1.0.0")
 
+_startup_error = None
 try:
     from fastapi.middleware.cors import CORSMiddleware
     from app.config import settings
@@ -45,10 +50,21 @@ try:
     app.include_router(v1_router, prefix="/api/v1")
 
 except Exception as e:
-    error_traceback = traceback.format_exc()
-    @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
-    async def catch_all(path_name: str):
+    _startup_error = traceback.format_exc()
+    print(f"STARTUP ERROR: {_startup_error}")
+
+@app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
+async def catch_all(request: Request, path_name: str):
+    if _startup_error:
         return JSONResponse(
             status_code=500,
-            content={"error": "Startup Import Error", "traceback": error_traceback}
+            content={
+                "error": "Startup Import Error", 
+                "message": "The server failed to initialize properly.",
+                "traceback": _startup_error
+            }
         )
+    return JSONResponse(
+        status_code=404,
+        content={"error": "Not Found", "path": path_name}
+    )
