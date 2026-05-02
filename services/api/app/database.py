@@ -11,8 +11,14 @@ from app.config import settings
 _pool_class = NullPool if settings.is_production else AsyncAdaptedQueuePool
 
 db_url = settings.database_url
-if db_url and db_url.startswith("postgresql://"):
-    db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
+if db_url:
+    # Handle the pgbouncer=true parameter which asyncpg doesn't recognize
+    if "pgbouncer=true" in db_url.lower():
+        db_url = db_url.replace("pgbouncer=true", "")
+        db_url = db_url.replace("&&", "&").replace("?&", "?").rstrip("?").rstrip("&")
+
+    if db_url.startswith("postgresql://"):
+        db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
 
 if db_url:
     engine = create_async_engine(
