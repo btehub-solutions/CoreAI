@@ -226,7 +226,8 @@ export default function SettingsPage() {
           </div>
         </section>
 
-        {/* Notifications */}
+        {/* Notifications (Locked for v1) */}
+        {false && (
         <section className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-[2.5rem] overflow-hidden shadow-2xl">
           <div className="p-8 border-b border-[#1a1a1a] bg-[#111111]/50 flex items-center gap-3">
             <SparklesIcon className="h-5 w-5 text-emerald-500" />
@@ -262,6 +263,7 @@ export default function SettingsPage() {
             </div>
           </div>
         </section>
+        )}
 
         {/* Account */}
         <section className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-[2.5rem] overflow-hidden shadow-2xl">
