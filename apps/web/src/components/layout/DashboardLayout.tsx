@@ -45,8 +45,8 @@ const OWNER_NAV = [
   { name: "Refunds", href: "/refunds", icon: RefundsIcon, activeIcon: RefundsIconSolid },
   { name: "Staff", href: "/staff", icon: StaffIcon, activeIcon: StaffIconSolid },
   { name: "Activity Log", href: "/audit-logs", icon: AuditIcon, activeIcon: AuditIconSolid },
-  { name: "Insights", href: "/insights", icon: AIIcon, activeIcon: AIIconSolid },
-  { name: "Tomorrow", href: "/tomorrow", icon: TomorrowIcon, activeIcon: TomorrowIconSolid },
+  // { name: "Insights", href: "/insights", icon: AIIcon, activeIcon: AIIconSolid }, // Locked for v2
+  // { name: "Tomorrow", href: "/tomorrow", icon: TomorrowIcon, activeIcon: TomorrowIconSolid }, // Locked for v2
   { name: "Settings", href: "/settings", icon: SettingsIcon, activeIcon: SettingsIconSolid },
 ]
 
