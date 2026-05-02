@@ -25,6 +25,10 @@ if db_url:
         db_url,
         echo=settings.debug,
         poolclass=_pool_class,
+        connect_args={
+            "statement_cache_size": 0,
+            "prepared_statement_cache_size": 0,
+        },
         **(
             {}
             if settings.is_production
