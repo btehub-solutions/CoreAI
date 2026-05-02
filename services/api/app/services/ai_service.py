@@ -292,8 +292,6 @@ Owner asks: {message}
 Answer using only the real business data above.
 Be direct and specific. Maximum 150 words.
 """
-        try:
-            response = self.client.models.generate_content_stream(
         response = self.client.models.generate_content_stream(
             model=settings.ai_model,
             contents=prompt,
