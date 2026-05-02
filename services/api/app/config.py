@@ -37,7 +37,7 @@ class Settings(BaseSettings):
     refresh_token_expire_days: int = 7
 
     gemini_api_key: str = ""
-    ai_model: str = "gemini-1.5-flash"
+    ai_model: str = "gemini-2.5-flash"
 
     mail_username: str = ""
     mail_password: str = ""
