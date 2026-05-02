@@ -19,7 +19,8 @@ class SectorType(str, enum.Enum):
 class Business(TimestampedBase):
     __tablename__ = "businesses"
     name = Column(String(120), nullable=False)
-    sector = Column(Enum(SectorType), nullable=False)
+    sector = Column(Enum(SectorType, values_callable=lambda x: [e.value for e in x]), 
+                    nullable=False)
     owner_id = Column(GUID(), ForeignKey("users.id"),
                       nullable=False, unique=True)
     phone = Column(String(20), nullable=True)

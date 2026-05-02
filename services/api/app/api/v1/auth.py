@@ -54,6 +54,11 @@ async def signup(
         state=body.state
     )
     db.add(new_business)
+    await db.flush() # Get business ID
+    
+    # Link user to business
+    new_user.business_id = new_business.id
+    
     await db.commit()
     await db.refresh(new_user)
     await db.refresh(new_business)

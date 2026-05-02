@@ -13,7 +13,8 @@ class User(TimestampedBase):
     email = Column(String(255), unique=True, nullable=False, index=True)
     hashed_password = Column(String(255), nullable=False)
     phone = Column(String(20), nullable=True)
-    role = Column(Enum(UserRole), nullable=False, default=UserRole.OWNER)
+    role = Column(Enum(UserRole, values_callable=lambda x: [e.value for e in x]), 
+                  nullable=False, default=UserRole.OWNER)
     is_active = Column(Boolean, default=True, nullable=False)
     business_id = Column(GUID(), ForeignKey("businesses.id"),
                          nullable=True, index=True)
