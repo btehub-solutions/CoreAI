@@ -22,7 +22,11 @@ if db_url:
     # Handle the pgbouncer=true parameter which asyncpg doesn't recognize
     if "pgbouncer=true" in db_url.lower():
         db_url = db_url.replace("pgbouncer=true", "")
-        db_url = db_url.replace("&&", "&").replace("?&", "?").rstrip("?").rstrip("&")
+    
+    if "sslmode=" in db_url.lower():
+        db_url = db_url.replace("sslmode=", "ssl=")
+        
+    db_url = db_url.replace("&&", "&").replace("?&", "?").rstrip("?").rstrip("&")
 
     if db_url.startswith("postgresql://"):
         db_url = db_url.replace("postgresql://", "postgresql+asyncpg://", 1)
