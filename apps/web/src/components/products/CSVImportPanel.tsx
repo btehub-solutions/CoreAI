@@ -115,7 +115,11 @@ export default function CSVImportPanel({ open, onClose }: CSVImportPanelProps) {
     mutationFn: async (file: File) => {
       const formData = new FormData()
       formData.append("file", file)
-      const res = await apiClient.post("/api/v1/products/import-csv/preview", formData)
+      const res = await apiClient.post("/api/v1/products/import-csv/preview", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
       return res.data.data
     },
     onSuccess: (data) => {
