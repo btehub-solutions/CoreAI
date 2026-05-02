@@ -257,23 +257,17 @@ Owner asks: {message}
 Answer using only the real business data above.
 Be direct and specific. Maximum 150 words.
 """
-        try:
-            response_text = await _generate_with_retry(
-                client=self.client,
-                model=settings.ai_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                    max_output_tokens=400,
-                    temperature=0.7,
-                ),
-            )
-            return response_text
-        except Exception:
-            return (
-                "I could not process your question right now. "
-                "Please try again in a moment."
-            )
+        response_text = await _generate_with_retry(
+            client=self.client,
+            model=settings.ai_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                max_output_tokens=400,
+                temperature=0.7,
+            ),
+        )
+        return response_text
 
     async def stream_chat(
         self,
@@ -300,19 +294,15 @@ Be direct and specific. Maximum 150 words.
 """
         try:
             response = self.client.models.generate_content_stream(
-                model=settings.ai_model,
-                contents=prompt,
-                config=types.GenerateContentConfig(
-                    system_instruction=SYSTEM_PROMPT,
-                    max_output_tokens=400,
-                    temperature=0.7,
-                ),
-            )
-            for chunk in response:
-                if chunk.text:
-                    yield chunk.text
-        except Exception:
-            yield (
-                "I could not process your question right now. "
-                "Please try again in a moment."
-            )
+        response = self.client.models.generate_content_stream(
+            model=settings.ai_model,
+            contents=prompt,
+            config=types.GenerateContentConfig(
+                system_instruction=SYSTEM_PROMPT,
+                max_output_tokens=400,
+                temperature=0.7,
+            ),
+        )
+        for chunk in response:
+            if chunk.text:
+                yield chunk.text

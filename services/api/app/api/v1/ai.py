@@ -133,19 +133,13 @@ async def chat(
         )
 
     ai = AIService(db)
-    try:
-        response_text = await ai.chat(
-            business.id, message, history
-        )
-        return ApiResponse(data={
-            "message": response_text,
-            "role": "assistant",
-        })
-    except Exception as e:
-        raise HTTPException(
-            status_code=500,
-            detail="AI service temporarily unavailable"
-        )
+    response_text = await ai.chat(
+        business.id, message, history
+    )
+    return ApiResponse(data={
+        "message": response_text,
+        "role": "assistant",
+    })
 
 
 @router.get("/alerts")
