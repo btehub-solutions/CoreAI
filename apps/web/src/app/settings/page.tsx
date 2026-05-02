@@ -77,7 +77,7 @@ export default function SettingsPage() {
   }, [me])
 
   const profileMutation = useMutation({
-    mutationFn: (data: any) => apiClient.patch("/api/v1/businesses", data),
+    mutationFn: (data: any) => apiClient.patch("/api/v1/auth/profile", data),
     onSuccess: (res) => {
       const updated = res.data.data
       updateBusiness(updated.name)
@@ -91,7 +91,7 @@ export default function SettingsPage() {
   const [newSector, setNewSector] = useState<SectorType | "">("")
 
   const sectorMutation = useMutation({
-    mutationFn: (sector: SectorType) => apiClient.patch("/api/v1/businesses", { sector }),
+    mutationFn: (sector: SectorType) => apiClient.patch("/api/v1/auth/profile", { sector }),
     onSuccess: (res) => {
       updateSector(res.data.data.sector)
       toast.success("Sector updated")
@@ -122,7 +122,7 @@ export default function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
 
   const deleteMutation = useMutation({
-    mutationFn: () => apiClient.delete("/api/v1/users/me"),
+    mutationFn: () => apiClient.delete("/api/v1/auth/me"),
     onSuccess: () => {
       toast.success("Account deleted")
       logout()
@@ -134,9 +134,11 @@ export default function SettingsPage() {
     e.preventDefault()
     // Only send changed fields
     const changes: any = {}
-    if (profileForm.business_name !== me.business?.name) changes.name = profileForm.business_name
+    if (profileForm.business_name !== me.business?.name) changes.business_name = profileForm.business_name
     if (profileForm.city !== me.business?.city) changes.city = profileForm.city
     if (profileForm.state !== me.business?.state) changes.state = profileForm.state
+    if (profileForm.owner_name !== me.full_name) changes.full_name = profileForm.owner_name
+    if (profileForm.phone !== me.phone) changes.phone = profileForm.phone
     
     if (Object.keys(changes).length > 0) {
       profileMutation.mutate(changes)
@@ -178,14 +180,12 @@ export default function SettingsPage() {
               <Input 
                 label="Owner Name" 
                 value={profileForm.owner_name} 
-                disabled
-                className="opacity-60 cursor-not-allowed"
+                onChange={(e) => setProfileForm({...profileForm, owner_name: e.target.value})}
               />
               <Input 
                 label="Phone" 
                 value={profileForm.phone} 
-                disabled
-                className="opacity-60 cursor-not-allowed"
+                onChange={(e) => setProfileForm({...profileForm, phone: e.target.value})}
               />
               <div className="grid grid-cols-2 gap-4">
                 <Input 

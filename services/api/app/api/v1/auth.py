@@ -11,7 +11,7 @@ from app.core.security import (
 )
 from app.schemas.auth import (
     SignupRequest, LoginRequest, RefreshRequest, 
-    TokenResponse, MeResponse
+    TokenResponse, MeResponse, ProfileUpdateRequest
 )
 from app.schemas.common import ApiResponse
 from app.dependencies import get_current_user, get_current_business, get_owner
@@ -181,3 +181,52 @@ async def me(
         user=current_user,
         business=current_business
     ))
+
+@router.patch("/profile", response_model=ApiResponse[MeResponse])
+async def update_profile(
+    body: ProfileUpdateRequest,
+    current_user: User = Depends(get_current_user),
+    current_business: Business = Depends(get_current_business),
+    db: AsyncSession = Depends(get_db)
+):
+    if body.full_name is not None:
+        current_user.full_name = body.full_name
+    if body.phone is not None:
+        current_user.phone = body.phone
+        current_business.phone = body.phone
+    if body.business_name is not None:
+        current_business.name = body.business_name
+    if body.city is not None:
+        current_business.city = body.city
+    if body.state is not None:
+        current_business.state = body.state
+    if body.sector is not None:
+        current_business.sector = body.sector
+
+    await db.commit()
+    await db.refresh(current_user)
+    await db.refresh(current_business)
+
+    return ApiResponse(data=MeResponse(
+        user=current_user,
+        business=current_business
+    ))
+
+@router.delete("/me", response_model=ApiResponse[dict])
+async def delete_account(
+    current_user: User = Depends(get_owner),
+    db: AsyncSession = Depends(get_db)
+):
+    # Due to foreign keys, cascade deletes should handle the related records
+    # but we will just mark the user and business as deleted if we were soft deleting.
+    # We are physically deleting them per user request.
+    # Business first
+    biz_result = await db.execute(select(Business).where(Business.id == current_user.business_id))
+    business = biz_result.scalar_one_or_none()
+    
+    await db.delete(current_user)
+    if business:
+        await db.delete(business)
+        
+    await db.commit()
+    return ApiResponse(data={"deleted": True}, message="Account successfully deleted")

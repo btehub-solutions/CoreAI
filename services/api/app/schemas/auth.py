@@ -32,3 +32,11 @@ class TokenResponse(BaseModel):
 class MeResponse(BaseModel):
     user: UserRead
     business: BusinessRead
+
+class ProfileUpdateRequest(BaseModel):
+    full_name: Optional[str] = None
+    phone: Optional[str] = None
+    business_name: Optional[str] = None
+    city: Optional[str] = None
+    state: Optional[str] = None
+    sector: Optional[SectorType] = None
