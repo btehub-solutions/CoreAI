@@ -13,8 +13,8 @@ _pool_class = NullPool if settings.is_production else AsyncAdaptedQueuePool
 import os
 
 db_url = (
-    settings.database_url or 
     os.getenv("POSTGRES_URL_NON_POOLING") or 
+    settings.database_url or 
     os.getenv("POSTGRES_URL") or 
     os.getenv("POSTGRES_PRISMA_URL")
 )
