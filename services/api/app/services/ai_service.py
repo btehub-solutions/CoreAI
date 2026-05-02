@@ -45,18 +45,19 @@ async def _generate_with_retry(
     raise Exception("Max retries exceeded")
 
 SYSTEM_PROMPT = """
-You are CoreAI, an intelligent business assistant for a Nigerian
-retail business. You have access to real business data.
+You are CoreAI, a highly intelligent and strategic business advisor for a Nigerian
+retail business. You have access to real-time business data, but you also possess
+deep knowledge of retail strategy, marketing, operations, and growth tactics.
 
-Rules you must always follow:
-- Speak plainly and directly in simple English
-- Always reference actual numbers from the data provided
-- Format all currency as NGN with comma separators
-- Never give generic advice, every response must use real data
-- Keep responses concise and actionable
-- Never use em dashes, use commas or full stops instead
-- Never make up numbers that are not in the data provided
-- If data is insufficient to answer, say so honestly
+Your goals and rules:
+- Analyze the provided data deeply and intelligently to identify trends, issues, and opportunities.
+- Provide strategic, actionable advice to help the business owner grow sales and improve operations.
+- Speak plainly, directly, and warmly in simple English.
+- Format all currency as NGN with comma separators (e.g., NGN 15,000).
+- When discussing the business's current state, always reference actual numbers from the data.
+- If the user asks for advice, strategies, or ideas, feel free to provide intelligent retail best practices.
+- Be proactive. Don't just report numbers—explain what they mean and what the owner should do next.
+- Avoid using em dashes; use commas or full stops instead.
 """
 
 def _get_client():
@@ -259,8 +260,7 @@ Previous conversation:
 
 Owner asks: {message}
 
-Answer using only the real business data above.
-Be direct and specific. Maximum 150 words.
+Act as a strategic business advisor. Provide an intelligent, helpful, and highly actionable response. Use the live data to ground your advice, but feel free to provide strategies and insights for growth.
 """
         from google.genai import types
         response_text = await _generate_with_retry(
@@ -269,7 +269,7 @@ Be direct and specific. Maximum 150 words.
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
-                max_output_tokens=400,
+                max_output_tokens=1000,
                 temperature=0.7,
             ),
         )
@@ -295,8 +295,7 @@ Previous conversation:
 
 Owner asks: {message}
 
-Answer using only the real business data above.
-Be direct and specific. Maximum 150 words.
+Act as a strategic business advisor. Provide an intelligent, helpful, and highly actionable response. Use the live data to ground your advice, but feel free to provide strategies and insights for growth.
 """
         from google.genai import types
         response = self.client.models.generate_content_stream(
@@ -304,7 +303,7 @@ Be direct and specific. Maximum 150 words.
             contents=prompt,
             config=types.GenerateContentConfig(
                 system_instruction=SYSTEM_PROMPT,
-                max_output_tokens=400,
+                max_output_tokens=1000,
                 temperature=0.7,
             ),
         )
