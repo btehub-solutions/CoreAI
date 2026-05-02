@@ -1,6 +1,6 @@
 "use client"
 import { useState, useCallback } from "react"
-import { apiClient } from "@/lib/api-client"
+import apiClient from "@/lib/api-client"
 
 type Message = { role: "user" | "assistant"; content: string }
 
@@ -20,7 +20,7 @@ export function useAIChat() {
     })
 
     try {
-      const res = await apiClient.post("/ai/chat", {
+      const res = await apiClient.post("/api/v1/ai/chat", {
         message: content,
         history: messages.slice(-6),
       })

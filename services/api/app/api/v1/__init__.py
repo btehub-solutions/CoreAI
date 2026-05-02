@@ -9,7 +9,7 @@ from app.api.v1.staff import router as staff_router
 from app.api.v1.audit_logs import router as audit_logs_router
 from app.api.v1.ai import router as ai_router
 
-router = APIRouter(prefix="/api/v1")
+router = APIRouter()
 router.include_router(auth_router)
 router.include_router(products_router)
 router.include_router(sales_router)
