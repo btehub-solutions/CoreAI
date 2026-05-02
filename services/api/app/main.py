@@ -11,9 +11,11 @@ app = None
 
 # Step 1: Try to import FastAPI
 try:
-    from fastapi import FastAPI, Request
+    from fastapi import FastAPI, Request, Depends
     from fastapi.responses import JSONResponse
     from fastapi.middleware.cors import CORSMiddleware
+    from sqlalchemy.ext.asyncio import AsyncSession
+    from app.database import get_db
     
     app = FastAPI(title="CoreAI API", version="1.0.0")
 except Exception:
@@ -50,14 +52,41 @@ if app and not _startup_error:
             return response
 
         @app.get("/health")
-        async def health_check():
+        async def health_check(db: AsyncSession = Depends(get_db)):
+            db_status = "error"
+            try:
+                from sqlalchemy import text
+                await db.execute(text("SELECT 1"))
+                db_status = "ok"
+            except Exception as e:
+                db_status = f"error: {str(e)}"
+
             return {
                 "status": "ok",
+                "database": db_status,
                 "environment": settings.environment,
                 "version": "1.0.0",
             }
 
         app.include_router(v1_router, prefix="/api/v1")
+
+        @app.exception_handler(Exception)
+        async def global_exception_handler(request: Request, exc: Exception):
+            err_trace = traceback.format_exc()
+            print(f"GLOBAL ERROR: {err_trace}")
+            
+            # Use 'detail' for frontend compatibility
+            message = str(exc)
+            return JSONResponse(
+                status_code=500,
+                content={
+                    "success": False,
+                    "error": "Internal Server Error",
+                    "detail": message,
+                    "message": message,
+                    "traceback": err_trace if settings.debug else None
+                }
+            )
 
         @app.api_route("/{path_name:path}", methods=["GET", "POST", "PUT", "DELETE", "PATCH"])
         async def catch_all(request: Request, path_name: str):
