@@ -15,7 +15,7 @@ class Staff(TimestampedBase):
                          nullable=False, index=True)
     full_name = Column(String(120), nullable=False)
     phone = Column(String(20), nullable=True)
-    role = Column(Enum(StaffRole), nullable=False, default=StaffRole.WORKER)
+    role = Column(Enum(StaffRole, values_callable=lambda x: [e.value for e in x]), nullable=False, default=StaffRole.WORKER)
     salary_kobo = Column(Integer, default=0, nullable=False)
     is_active = Column(Boolean, default=True, nullable=False)
     deleted_at = Column(DateTime, nullable=True)

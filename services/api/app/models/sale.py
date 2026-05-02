@@ -20,8 +20,8 @@ class Sale(TimestampedBase):
     __tablename__ = "sales"
     business_id = Column(GUID(), ForeignKey("businesses.id"),
                          nullable=False, index=True)
-    payment_method = Column(Enum(PaymentMethod), nullable=False)
-    status = Column(Enum(SaleStatus), default=SaleStatus.COMPLETED, nullable=False)
+    payment_method = Column(Enum(PaymentMethod, values_callable=lambda x: [e.value for e in x]), nullable=False)
+    status = Column(Enum(SaleStatus, values_callable=lambda x: [e.value for e in x]), default=SaleStatus.COMPLETED, nullable=False)
     notes = Column(Text, nullable=True)
     sale_date = Column(DateTime, default=datetime.utcnow, nullable=False, index=True)
     deleted_at = Column(DateTime, nullable=True)
