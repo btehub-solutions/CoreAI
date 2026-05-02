@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, computed_field
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
@@ -16,11 +16,13 @@ class SaleItemRead(SaleItemBase):
     product_name: str
     unit_price_kobo: int
     total_kobo: int
-    
+
+    @computed_field  # type: ignore[misc]
     @property
     def unit_price_ngn(self) -> float:
         return self.unit_price_kobo / 100
-        
+
+    @computed_field  # type: ignore[misc]
     @property
     def total_ngn(self) -> float:
         return self.total_kobo / 100
@@ -40,15 +42,16 @@ class SaleRead(BaseModel):
     grand_total_kobo: int
     created_at: datetime
 
+    @computed_field  # type: ignore[misc]
     @property
     def grand_total_ngn(self) -> float:
         return self.grand_total_kobo / 100
 
-    class Config:
-        from_attributes = True
+    model_config = {"from_attributes": True}
+
 
 class SaleResponse(SaleRead):
-    grand_total_ngn: float
+    """Alias for SaleRead — computed grand_total_ngn is already included."""
 
     @classmethod
     def from_orm_with_ngn(cls, obj, items_data: List[dict]):

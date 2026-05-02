@@ -1,4 +1,4 @@
-from pydantic import BaseModel, field_validator
+from pydantic import BaseModel, field_validator, computed_field
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
@@ -47,38 +47,31 @@ class ProductRead(ProductBase):
     stock_quantity: int
     is_active: bool
     created_at: datetime
-    
+
+    @computed_field  # type: ignore[misc]
     @property
     def selling_price_ngn(self) -> float:
         return self.selling_price_kobo / 100
 
+    @computed_field  # type: ignore[misc]
     @property
     def cost_price_ngn(self) -> float:
         return self.cost_price_kobo / 100
-    
+
+    @computed_field  # type: ignore[misc]
     @property
     def is_low_stock(self) -> bool:
         return self.stock_quantity <= self.low_stock_threshold
 
-    class Config:
-        from_attributes = True
-        # To include properties in response
-        json_encoders = {
-            datetime: lambda v: v.isoformat(),
-        }
+    model_config = {"from_attributes": True}
+
 
 class ProductResponse(ProductRead):
-    selling_price_ngn: float
-    cost_price_ngn: float
-    is_low_stock: bool
+    """Alias for ProductRead — computed fields are already included."""
 
     @classmethod
     def from_orm_with_ngn(cls, obj):
-        data = cls.from_orm(obj)
-        data.selling_price_ngn = obj.selling_price_kobo / 100
-        data.cost_price_ngn = obj.cost_price_kobo / 100
-        data.is_low_stock = obj.stock_quantity <= obj.low_stock_threshold
-        return data
+        return cls.model_validate(obj)
 
 class StockAdjustmentRequest(BaseModel):
     adjustment: int

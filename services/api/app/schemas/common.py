@@ -1,4 +1,4 @@
-from typing import TypeVar, Generic, Optional, List
+from typing import TypeVar, Generic, Optional, List, Any
 from pydantic import BaseModel
 
 T = TypeVar("T")
@@ -21,4 +21,4 @@ class PaginatedResponse(BaseModel, Generic[T]):
 class ErrorResponse(BaseModel):
     success: bool = False
     error: str
-    detail: object = None
+    detail: Optional[Any] = None

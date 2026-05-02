@@ -5,8 +5,6 @@ from sqlalchemy import select, update, func, or_
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
-from google import genai
-from google.genai import types
 import asyncio
 import json
 import io
@@ -157,6 +155,8 @@ async def preview_csv_import(
     columns = list(rows[0].keys())
     sample = rows[:3]
 
+    from google import genai  # local import — avoids Pydantic warning at module load
+    from google.genai import types as genai_types
     client = genai.Client(api_key=settings.gemini_api_key)
     prompt = f"""
 You are mapping CSV columns to a product database schema.
@@ -201,7 +201,7 @@ Rules:
             response = client.models.generate_content(
                 model=settings.ai_model,
                 contents=prompt,
-                config=types.GenerateContentConfig(
+                config=genai_types.GenerateContentConfig(
                     temperature=0.1,
                 )
             )
@@ -433,7 +433,7 @@ async def update_product(
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
     
-    update_data = body.dict(exclude_unset=True)
+    update_data = body.model_dump(exclude_unset=True)
     
     price_changed = "selling_price_ngn" in update_data
     

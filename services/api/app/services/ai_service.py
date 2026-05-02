@@ -1,5 +1,6 @@
-from google import genai
-from google.genai import types
+# google-genai is imported lazily inside _get_client() to avoid a
+# Pydantic ArbitraryTypeWarning that the library triggers on Python 3.13
+# when its internal models are introspected at module-load time.
 from app.config import settings
 from sqlalchemy.ext.asyncio import AsyncSession
 from uuid import UUID
@@ -58,7 +59,8 @@ Rules you must always follow:
 - If data is insufficient to answer, say so honestly
 """
 
-def _get_client() -> genai.Client:
+def _get_client():
+    from google import genai  # lazy import — avoids Pydantic warning at module load
     return genai.Client(api_key=settings.gemini_api_key)
 
 class AIService:
@@ -132,6 +134,7 @@ Format:
 Maximum 120 words. Warm but direct. No bullet points.
 """
         try:
+            from google.genai import types
             response_text = await _generate_with_retry(
                 client=self.client,
                 model=settings.ai_model,
@@ -174,6 +177,7 @@ Priority: high (urgent), medium (important), info (observation).
 Every recommendation must use actual numbers from the data.
 """
         try:
+            from google.genai import types
             response_text = await _generate_with_retry(
                 client=self.client,
                 model=settings.ai_model,
@@ -217,6 +221,7 @@ Rules:
 - Maximum 3 alerts
 """
         try:
+            from google.genai import types
             response_text = await _generate_with_retry(
                 client=self.client,
                 model=settings.ai_model,
@@ -257,6 +262,7 @@ Owner asks: {message}
 Answer using only the real business data above.
 Be direct and specific. Maximum 150 words.
 """
+        from google.genai import types
         response_text = await _generate_with_retry(
             client=self.client,
             model=settings.ai_model,
@@ -292,6 +298,7 @@ Owner asks: {message}
 Answer using only the real business data above.
 Be direct and specific. Maximum 150 words.
 """
+        from google.genai import types
         response = self.client.models.generate_content_stream(
             model=settings.ai_model,
             contents=prompt,
