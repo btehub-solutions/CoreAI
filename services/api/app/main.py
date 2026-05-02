@@ -54,16 +54,25 @@ if app and not _startup_error:
         @app.get("/health")
         async def health_check(db: AsyncSession = Depends(get_db)):
             db_status = "error"
+            tables_status = "unknown"
             try:
                 from sqlalchemy import text
                 await db.execute(text("SELECT 1"))
                 db_status = "ok"
+                
+                # Check if 'users' table exists
+                result = await db.execute(text(
+                    "SELECT EXISTS (SELECT FROM information_schema.tables WHERE table_name = 'users')"
+                ))
+                tables_exist = result.scalar()
+                tables_status = "initialized" if tables_exist else "missing (run migrations)"
             except Exception as e:
                 db_status = f"error: {str(e)}"
 
             return {
                 "status": "ok",
                 "database": db_status,
+                "tables": tables_status,
                 "environment": settings.environment,
                 "version": "1.0.0",
             }
