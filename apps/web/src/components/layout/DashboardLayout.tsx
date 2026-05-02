@@ -135,9 +135,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
   }
 
   return (
-    <div className="flex min-h-screen bg-[#0a0a0a] text-white">
+    <div className="flex min-h-screen bg-transparent text-white">
       {/* Sidebar */}
-      <aside className="w-64 bg-[#0f0f0f] border-r border-[#1a1a1a] flex flex-col h-screen sticky top-0">
+      <aside className="w-64 bg-[#0a0a0a]/60 backdrop-blur-3xl border-r border-white/5 flex flex-col h-screen sticky top-0 z-20">
         <div className="p-6">
           <Logo />
         </div>
@@ -151,20 +151,23 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
                 key={item.name}
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2 text-sm font-medium transition-all rounded-xl",
+                  "flex items-center gap-3 px-3 py-2.5 text-sm font-medium transition-all duration-300 rounded-xl relative group overflow-hidden",
                   isActive 
-                    ? "bg-[#0d1f17] text-emerald-400" 
-                    : "text-gray-500 hover:text-gray-200 hover:bg-[#1a1a1a]"
+                    ? "text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 shadow-[0_0_15px_rgba(16,185,129,0.1)]" 
+                    : "text-gray-500 hover:text-gray-200 hover:bg-white/5"
                 )}
               >
-                <Icon className={cn("h-5 w-5", isActive ? "text-emerald-400" : "text-gray-500")} />
-                {item.name}
+                {isActive && (
+                  <div className="absolute inset-0 bg-gradient-to-r from-emerald-500/10 to-transparent opacity-50" />
+                )}
+                <Icon className={cn("h-5 w-5 relative z-10 transition-transform duration-300 group-hover:scale-110", isActive ? "text-emerald-400 drop-shadow-[0_0_8px_rgba(16,185,129,0.5)]" : "text-gray-500")} />
+                <span className="relative z-10">{item.name}</span>
               </Link>
             )
           })}
         </nav>
 
-        <div className="p-4 border-t border-[#1a1a1a] space-y-4">
+        <div className="p-4 border-t border-white/5 space-y-4 bg-black/20">
           <div className="flex items-center gap-3 px-2">
             <div className="w-8 h-8 rounded-lg bg-emerald-500/10 flex items-center justify-center text-emerald-500 font-bold text-xs">
               {ownerName?.split(" ").map(n => n[0]).join("") || "U"}
@@ -187,8 +190,8 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-screen">
-        <header className="h-16 border-b border-[#1a1a1a] flex items-center justify-between px-8 bg-[#0a0a0a]/50 backdrop-blur-xl sticky top-0 z-10">
+      <main className="flex-1 flex flex-col min-h-screen relative z-10">
+        <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-[#0a0a0a]/60 backdrop-blur-2xl sticky top-0 z-30">
           <div className="flex flex-col">
             <h2 className="text-sm font-bold text-white uppercase tracking-wider">
               {navItems.find(i => i.href === pathname)?.name || "Dashboard"}
