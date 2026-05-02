@@ -103,8 +103,8 @@ export default function DashboardPage() {
           </div>
         </section>
 
-        {/* Smart Alerts */}
-        {showAI && <SmartAlerts />}
+        {/* Smart Alerts (Locked for v1) */}
+        {false && showAI && <SmartAlerts />}
 
         {/* KPI Grid */}
         <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -129,11 +129,13 @@ export default function DashboardPage() {
           />
         </section>
 
-        {/* Daily Brief */}
-        {showAI ? (
-          <DailyBriefCard />
-        ) : (
-          <div className="h-24 animate-pulse rounded-xl bg-[#0d1f17] border border-emerald-900/30" />
+        {/* Daily Brief (Locked for v1) */}
+        {false && (
+          showAI ? (
+            <DailyBriefCard />
+          ) : (
+            <div className="h-24 animate-pulse rounded-xl bg-[#0d1f17] border border-emerald-900/30" />
+          )
         )}
 
         {/* Alerts & Chart Row */}
