@@ -1,8 +1,9 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import field_validator
+from pydantic import field_validator, model_validator
 from functools import lru_cache
 from typing import List
 import json
+import os
 
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(
@@ -38,6 +39,8 @@ class Settings(BaseSettings):
 
     gemini_api_key: str = ""
     ai_model: str = "gemini-2.5-flash"
+    ai_rate_limit_per_hour: int = 30
+    ai_max_message_chars: int = 1200
 
     mail_username: str = ""
     mail_password: str = ""
@@ -52,9 +55,22 @@ class Settings(BaseSettings):
     def is_production(self) -> bool:
         return self.environment == "production"
 
+    @model_validator(mode="after")
+    def validate_production_settings(self) -> "Settings":
+        if self.is_production:
+            if self.secret_key in {"", "dev-secret-key", "change-me-generate-a-real-secret-key"}:
+                raise ValueError("SECRET_KEY must be set to a strong unique value in production")
+            if len(self.secret_key) < 32:
+                raise ValueError("SECRET_KEY must be at least 32 characters in production")
+            if not self.database_url and not any(
+                os.getenv(key)
+                for key in ("POSTGRES_URL_NON_POOLING", "POSTGRES_URL", "POSTGRES_PRISMA_URL")
+            ):
+                raise ValueError("DATABASE_URL or a supported POSTGRES_URL must be set in production")
+        return self
+
 @lru_cache
 def get_settings() -> Settings:
     return Settings()
 
 settings = get_settings()
-

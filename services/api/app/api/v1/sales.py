@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException, status, Query, Request
 from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
+from sqlalchemy import select, func, update
 from datetime import datetime
 from typing import Optional, List
 from uuid import UUID
@@ -83,21 +83,28 @@ async def create_sale(
     for item in body.items:
         product = products[item.product_id]
         
-        # 3. Check stock
-        if product.stock_quantity < item.quantity:
-            await db.rollback()
-            raise HTTPException(
-                status_code=400, 
-                detail=f"Insufficient stock for {product.name}"
-            )
-        
         # 4. & 5. Calculate prices
         unit_price = product.selling_price_kobo
         item_total = unit_price * item.quantity
         grand_total_kobo += item_total
         
-        # 6. Deduct stock
-        product.stock_quantity -= item.quantity
+        # 6. Deduct stock atomically so concurrent sales cannot oversell.
+        stock_result = await db.execute(
+            update(Product)
+            .where(
+                Product.id == product.id,
+                Product.business_id == business.id,
+                Product.deleted_at == None,
+                Product.stock_quantity >= item.quantity,
+            )
+            .values(stock_quantity=Product.stock_quantity - item.quantity)
+        )
+        if stock_result.rowcount != 1:
+            await db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail=f"Insufficient stock for {product.name}",
+            )
         
         # 8. Prepare SaleItem
         si = SaleItem(

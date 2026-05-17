@@ -191,32 +191,34 @@ export default function DashboardPage() {
 
             {/* Top Products */}
             <div className="bg-[#0f0f0f] border border-[#1a1a1a] rounded-3xl overflow-hidden">
-              <div className="p-8 border-b border-[#1a1a1a]">
+              <div className="p-6 lg:p-8 border-b border-[#1a1a1a]">
                 <h3 className="text-sm font-bold text-gray-400 uppercase tracking-widest">Top Products Today</h3>
               </div>
-              <table className="w-full text-left">
-                <thead className="bg-[#111111] text-[10px] uppercase tracking-widest font-bold text-gray-500">
-                  <tr>
-                    <th className="px-8 py-4">Product Name</th>
-                    <th className="px-8 py-4">Qty Sold</th>
-                    <th className="px-8 py-4">Revenue</th>
-                  </tr>
-                </thead>
+              <div className="overflow-x-auto">
+                <table className="w-full text-left whitespace-nowrap">
+                  <thead className="bg-[#111111] text-[10px] uppercase tracking-widest font-bold text-gray-500">
+                    <tr>
+                      <th className="px-6 lg:px-8 py-4">Product Name</th>
+                      <th className="px-6 lg:px-8 py-4">Qty Sold</th>
+                      <th className="px-6 lg:px-8 py-4">Revenue</th>
+                    </tr>
+                  </thead>
                 <tbody className="divide-y divide-[#1a1a1a]">
                   {stats.top_products?.map((p: any) => (
                     <tr key={p.product_id} className="text-sm hover:bg-[#1a1a1a]/50">
-                      <td className="px-8 py-4 font-medium">{p.name}</td>
-                      <td className="px-8 py-4 text-gray-400">{p.quantity_sold}</td>
-                      <td className="px-8 py-4 font-semibold">{formatNGN(p.revenue_kobo)}</td>
+                      <td className="px-6 lg:px-8 py-4 font-medium">{p.name}</td>
+                      <td className="px-6 lg:px-8 py-4 text-gray-400">{p.quantity_sold}</td>
+                      <td className="px-6 lg:px-8 py-4 font-semibold">{formatNGN(p.revenue_kobo)}</td>
                     </tr>
                   ))}
                   {(!stats.top_products || stats.top_products.length === 0) && (
                     <tr>
-                      <td colSpan={3} className="px-8 py-12 text-center text-gray-500 italic">No sales recorded today</td>
+                      <td colSpan={3} className="px-6 lg:px-8 py-12 text-center text-gray-500 italic">No sales recorded today</td>
                     </tr>
                   )}
                 </tbody>
               </table>
+              </div>
             </div>
           </div>
 
@@ -298,7 +300,7 @@ function StatCard({ title, value, change, isNegative, isProfit }: any) {
       </div>
       <p className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">{title}</p>
       <div className="flex items-end justify-between">
-        <h4 className="text-2xl font-black">{value}</h4>
+        <h4 className="text-xl sm:text-2xl font-black truncate max-w-[70%]">{value}</h4>
         {change !== undefined && (
           <div className={cn(
             "flex items-center gap-1 text-[10px] font-bold px-2 py-1 rounded-full",

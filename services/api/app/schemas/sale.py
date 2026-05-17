@@ -1,4 +1,4 @@
-from pydantic import BaseModel, computed_field
+from pydantic import BaseModel, computed_field, Field, field_validator
 from uuid import UUID
 from datetime import datetime
 from typing import List, Optional
@@ -6,7 +6,7 @@ from app.models.sale import PaymentMethod, SaleStatus
 
 class SaleItemBase(BaseModel):
     product_id: UUID
-    quantity: int
+    quantity: int = Field(gt=0, le=10000)
 
 class SaleItemCreate(SaleItemBase):
     pass
@@ -29,8 +29,16 @@ class SaleItemRead(SaleItemBase):
 
 class SaleCreate(BaseModel):
     payment_method: PaymentMethod
-    notes: Optional[str] = None
-    items: List[SaleItemCreate]
+    notes: Optional[str] = Field(default=None, max_length=1000)
+    items: List[SaleItemCreate] = Field(min_length=1, max_length=100)
+
+    @field_validator("items")
+    @classmethod
+    def validate_unique_products(cls, value: List[SaleItemCreate]) -> List[SaleItemCreate]:
+        product_ids = [item.product_id for item in value]
+        if len(product_ids) != len(set(product_ids)):
+            raise ValueError("Duplicate products in a sale must be combined into one line item")
+        return value
 
 class SaleRead(BaseModel):
     id: UUID

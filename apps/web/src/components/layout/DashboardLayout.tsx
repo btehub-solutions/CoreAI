@@ -19,7 +19,8 @@ import {
   ClipboardDocumentListIcon as AuditIcon,
   SparklesIcon as AIIcon,
   SunIcon as TomorrowIcon,
-  PlusCircleIcon as NewSaleIcon
+  PlusCircleIcon as NewSaleIcon,
+  Bars3Icon
 } from "@heroicons/react/24/outline"
 import { useQuery } from "@tanstack/react-query"
 import apiClient from "@/lib/api-client"
@@ -57,6 +58,7 @@ const CASHIER_NAV = [
 
 export default function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [mounted, setMounted] = React.useState(false)
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false)
   const pathname = usePathname()
   const router = useRouter()
 
@@ -117,6 +119,10 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
     }
   }, [isAuthenticated, isCashier, pathname, router])
 
+  React.useEffect(() => {
+    setIsMobileMenuOpen(false)
+  }, [pathname])
+
   const handleLogout = () => {
     logout()
     router.push("/auth/login")
@@ -136,8 +142,19 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
 
   return (
     <div className="flex min-h-screen bg-transparent text-white">
+      {/* Mobile Overlay */}
+      {isMobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black/60 z-40 lg:hidden"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
-      <aside className="w-64 bg-[#0a0a0a]/60 backdrop-blur-3xl border-r border-white/5 flex flex-col h-screen sticky top-0 z-20">
+      <aside className={cn(
+        "w-64 bg-[#0a0a0a] border-r border-white/5 flex flex-col h-screen fixed lg:sticky top-0 z-50 transition-transform duration-300",
+        isMobileMenuOpen ? "translate-x-0" : "-translate-x-full lg:translate-x-0"
+      )}>
         <div className="p-6">
           <Logo />
         </div>
@@ -190,10 +207,16 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-screen relative z-10">
-        <header className="h-16 border-b border-white/5 flex items-center justify-between px-8 bg-[#0a0a0a]/60 backdrop-blur-2xl sticky top-0 z-30">
-          <div className="flex flex-col">
-            <h2 className="text-sm font-bold text-white uppercase tracking-wider">
+      <main className="flex-1 flex flex-col min-h-screen relative z-10 w-full lg:w-auto">
+        <header className="h-16 border-b border-white/5 flex items-center justify-between px-4 lg:px-8 bg-[#0a0a0a]/60 backdrop-blur-2xl sticky top-0 z-30">
+          <div className="flex items-center gap-3">
+            <button 
+              className="lg:hidden text-gray-400 hover:text-white"
+              onClick={() => setIsMobileMenuOpen(true)}
+            >
+              <Bars3Icon className="h-6 w-6" />
+            </button>
+            <h2 className="text-sm font-bold text-white uppercase tracking-wider hidden sm:block">
               {navItems.find(i => i.href === pathname)?.name || "Dashboard"}
             </h2>
           </div>
@@ -203,7 +226,7 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             </div>
           </div>
         </header>
-        <div className="p-8">
+        <div className="p-4 lg:p-8 overflow-x-hidden">
           {children}
         </div>
       </main>

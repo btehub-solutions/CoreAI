@@ -1,19 +1,19 @@
-from pydantic import BaseModel, field_validator, computed_field
+from pydantic import BaseModel, field_validator, computed_field, Field
 from uuid import UUID
 from datetime import datetime
 from typing import Optional
 
 class ProductBase(BaseModel):
-    name: str
-    sku: Optional[str] = None
-    category: Optional[str] = None
-    unit: str = "unit"
-    low_stock_threshold: int = 5
+    name: str = Field(min_length=1, max_length=120)
+    sku: Optional[str] = Field(default=None, max_length=80)
+    category: Optional[str] = Field(default=None, max_length=80)
+    unit: str = Field(default="unit", min_length=1, max_length=20)
+    low_stock_threshold: int = Field(default=5, ge=0)
 
 class ProductCreate(ProductBase):
-    selling_price_ngn: float
-    cost_price_ngn: float
-    stock_quantity: int
+    selling_price_ngn: float = Field(ge=0)
+    cost_price_ngn: float = Field(ge=0)
+    stock_quantity: int = Field(ge=0)
 
     @field_validator("stock_quantity")
     @classmethod
@@ -23,14 +23,14 @@ class ProductCreate(ProductBase):
         return v
 
 class ProductUpdate(BaseModel):
-    name: Optional[str] = None
-    sku: Optional[str] = None
-    category: Optional[str] = None
-    unit: Optional[str] = None
-    low_stock_threshold: Optional[int] = None
-    selling_price_ngn: Optional[float] = None
-    cost_price_ngn: Optional[float] = None
-    stock_quantity: Optional[int] = None
+    name: Optional[str] = Field(default=None, min_length=1, max_length=120)
+    sku: Optional[str] = Field(default=None, max_length=80)
+    category: Optional[str] = Field(default=None, max_length=80)
+    unit: Optional[str] = Field(default=None, min_length=1, max_length=20)
+    low_stock_threshold: Optional[int] = Field(default=None, ge=0)
+    selling_price_ngn: Optional[float] = Field(default=None, ge=0)
+    cost_price_ngn: Optional[float] = Field(default=None, ge=0)
+    stock_quantity: Optional[int] = Field(default=None, ge=0)
     is_active: Optional[bool] = None
 
     @field_validator("stock_quantity")

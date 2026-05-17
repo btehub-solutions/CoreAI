@@ -1,20 +1,41 @@
 from fastapi import APIRouter, Depends, Request, HTTPException
 from fastapi.responses import StreamingResponse
 from sqlalchemy.ext.asyncio import AsyncSession
+from pydantic import BaseModel, Field, field_validator
 import redis.asyncio as aioredis
 import json
-from datetime import date
+import time
+from datetime import date, datetime, timezone
 from typing import Optional
 
 from app.database import get_db
 from app.config import settings
 from app.models.user import User
 from app.models.business import Business
+from app.models.ai_usage import AIUsageEvent
 from app.dependencies import get_owner, get_current_business
-from app.services.ai_service import AIService
+from app.services.ai_service import AIService, AIUnavailableError
 from app.schemas.common import ApiResponse
 
 router = APIRouter()
+
+
+class ChatMessage(BaseModel):
+    role: str = Field(pattern="^(user|assistant)$")
+    content: str = Field(min_length=1, max_length=2000)
+
+
+class AIChatRequest(BaseModel):
+    message: str = Field(min_length=1, max_length=settings.ai_max_message_chars)
+    history: list[ChatMessage] = Field(default_factory=list, max_length=12)
+
+    @field_validator("message")
+    @classmethod
+    def validate_message(cls, value: str) -> str:
+        normalized = value.strip()
+        if not normalized:
+            raise ValueError("Message cannot be empty")
+        return normalized
 
 
 async def _get_redis() -> Optional[aioredis.Redis]:
@@ -36,6 +57,58 @@ async def _close_redis(r: Optional[aioredis.Redis]) -> None:
             await r.aclose()
         except Exception:
             pass
+
+
+async def _enforce_ai_rate_limit(
+    redis: Optional[aioredis.Redis],
+    business_id: str,
+    user_id: str,
+) -> None:
+    if not redis:
+        return
+    hour_bucket = datetime.now(timezone.utc).strftime("%Y%m%d%H")
+    key = f"ai-rate:{business_id}:{user_id}:{hour_bucket}"
+    try:
+        count = await redis.incr(key)
+        if count == 1:
+            await redis.expire(key, 3700)
+        if count > settings.ai_rate_limit_per_hour:
+            raise HTTPException(
+                status_code=429,
+                detail="AI usage limit reached. Please try again later.",
+            )
+    except HTTPException:
+        raise
+    except Exception:
+        return
+
+
+async def _record_ai_usage(
+    db: AsyncSession,
+    business_id: str,
+    user_id: str,
+    endpoint: str,
+    status: str,
+    prompt_chars: int,
+    response_chars: int,
+    latency_ms: int,
+    error_code: str | None = None,
+) -> None:
+    try:
+        db.add(AIUsageEvent(
+            business_id=business_id,
+            user_id=user_id,
+            endpoint=endpoint,
+            model=settings.ai_model,
+            status=status,
+            prompt_chars=prompt_chars,
+            response_chars=response_chars,
+            latency_ms=latency_ms,
+            error_code=error_code,
+        ))
+        await db.commit()
+    except Exception:
+        await db.rollback()
 
 
 @router.post("/daily-brief")
@@ -61,12 +134,19 @@ async def get_daily_brief(
         except Exception:
             pass
 
-    ai = AIService(db)
-    brief = await ai.generate_daily_brief(
-        business.id,
-        business.name,
-        current_user.full_name.split()[0],
-    )
+    try:
+        ai = AIService(db)
+        brief = await ai.generate_daily_brief(
+            business.id,
+            business.name,
+            current_user.full_name.split()[0],
+        )
+    except AIUnavailableError:
+        await _close_redis(redis)
+        raise HTTPException(
+            status_code=503,
+            detail="AI is not configured. Add GEMINI_API_KEY to enable daily briefs.",
+        )
 
     if redis:
         try:
@@ -102,8 +182,15 @@ async def get_tomorrow_brief(
         except Exception:
             pass
 
-    ai = AIService(db)
-    cards = await ai.generate_tomorrow_brief(business.id)
+    try:
+        ai = AIService(db)
+        cards = await ai.generate_tomorrow_brief(business.id)
+    except AIUnavailableError:
+        await _close_redis(redis)
+        raise HTTPException(
+            status_code=503,
+            detail="AI is not configured. Add GEMINI_API_KEY to enable recommendations.",
+        )
 
     if redis:
         try:
@@ -118,23 +205,62 @@ async def get_tomorrow_brief(
 
 @router.post("/chat")
 async def chat(
-    payload: dict,
+    payload: AIChatRequest,
     current_user: User = Depends(get_owner),
     business: Business = Depends(get_current_business),
     db: AsyncSession = Depends(get_db),
 ):
-    message = payload.get("message", "").strip()
-    history = payload.get("history", [])
+    redis = await _get_redis()
+    await _enforce_ai_rate_limit(redis, str(business.id), str(current_user.id))
 
-    if not message:
-        raise HTTPException(
-            status_code=400,
-            detail="Message cannot be empty"
+    started = time.perf_counter()
+    try:
+        ai = AIService(db)
+        response_text = await ai.chat(
+            business.id,
+            payload.message,
+            [message.model_dump() for message in payload.history],
         )
-
-    ai = AIService(db)
-    response_text = await ai.chat(
-        business.id, message, history
+    except AIUnavailableError:
+        await _record_ai_usage(
+            db,
+            str(business.id),
+            str(current_user.id),
+            "chat",
+            "unavailable",
+            len(payload.message),
+            0,
+            int((time.perf_counter() - started) * 1000),
+            "missing_api_key",
+        )
+        raise HTTPException(
+            status_code=503,
+            detail="AI is not configured. Add GEMINI_API_KEY to enable CoreAI assistant.",
+        )
+    except Exception:
+        await _record_ai_usage(
+            db,
+            str(business.id),
+            str(current_user.id),
+            "chat",
+            "error",
+            len(payload.message),
+            0,
+            int((time.perf_counter() - started) * 1000),
+            "provider_error",
+        )
+        raise
+    finally:
+        await _close_redis(redis)
+    await _record_ai_usage(
+        db,
+        str(business.id),
+        str(current_user.id),
+        "chat",
+        "success",
+        len(payload.message),
+        len(response_text),
+        int((time.perf_counter() - started) * 1000),
     )
     return ApiResponse(data={
         "message": response_text,
@@ -161,8 +287,15 @@ async def get_smart_alerts(
         except Exception:
             pass
 
-    ai = AIService(db)
-    alerts = await ai.generate_smart_alerts(business.id)
+    try:
+        ai = AIService(db)
+        alerts = await ai.generate_smart_alerts(business.id)
+    except AIUnavailableError:
+        await _close_redis(redis)
+        raise HTTPException(
+            status_code=503,
+            detail="AI is not configured. Add GEMINI_API_KEY to enable alerts.",
+        )
 
     if redis:
         try:

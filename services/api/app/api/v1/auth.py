@@ -11,7 +11,8 @@ from app.core.security import (
 )
 from app.schemas.auth import (
     SignupRequest, LoginRequest, RefreshRequest, 
-    TokenResponse, MeResponse, ProfileUpdateRequest
+    TokenResponse, MeResponse, ProfileUpdateRequest,
+    ChangePasswordRequest,
 )
 from app.schemas.common import ApiResponse
 from app.dependencies import get_current_user, get_current_business, get_owner
@@ -211,6 +212,41 @@ async def update_profile(
         user=current_user,
         business=current_business
     ))
+
+
+@router.post("/change-password", response_model=ApiResponse[dict])
+async def change_password(
+    body: ChangePasswordRequest,
+    request: Request,
+    current_user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    if not verify_password(body.current_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="Current password is incorrect",
+        )
+
+    if verify_password(body.new_password, current_user.hashed_password):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="New password must be different from the current password",
+        )
+
+    current_user.hashed_password = hash_password(body.new_password)
+    await db.commit()
+
+    await log_action(
+        db=db,
+        user=current_user,
+        action="auth.password_changed",
+        resource="auth",
+        resource_id=current_user.id,
+        detail="User changed password",
+        ip_address=request.client.host if request.client else None,
+    )
+
+    return ApiResponse(data={"changed": True}, message="Password changed successfully")
 
 @router.delete("/me", response_model=ApiResponse[dict])
 async def delete_account(

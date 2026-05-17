@@ -7,6 +7,7 @@ from app.models.expense import Expense
 from app.models.refund import Refund
 from app.models.staff import Staff, StaffRole
 from app.models.audit_log import AuditLog
+from app.models.ai_usage import AIUsageEvent
 
 __all__ = [
     "Base",
@@ -23,4 +24,5 @@ __all__ = [
     "Staff",
     "StaffRole",
     "AuditLog",
+    "AIUsageEvent",
 ]

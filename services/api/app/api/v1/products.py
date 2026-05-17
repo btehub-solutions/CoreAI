@@ -11,6 +11,8 @@ import io
 import csv
 import base64
 import uuid as uuid_lib
+import hashlib
+import hmac
 
 from app.database import get_db
 from app.models.product import Product
@@ -154,6 +156,12 @@ async def preview_csv_import(
 
     columns = list(rows[0].keys())
     sample = rows[:3]
+
+    if not settings.gemini_api_key:
+        raise HTTPException(
+            status_code=503,
+            detail="AI import mapping is not configured. Add GEMINI_API_KEY or use the CSV template.",
+        )
 
     from google import genai  # local import — avoids Pydantic warning at module load
     from google.genai import types as genai_types
@@ -543,10 +551,24 @@ async def adjust_stock(
 
 
 def _encode_import_data(rows: list) -> str:
-    data = json.dumps(rows)
-    return base64.b64encode(data.encode()).decode()
+    payload = json.dumps(rows, separators=(",", ":")).encode()
+    signature = hmac.new(
+        settings.secret_key.encode(),
+        payload,
+        hashlib.sha256,
+    ).hexdigest()
+    token = base64.urlsafe_b64encode(payload).decode()
+    return f"{token}.{signature}"
 
 
 def _decode_import_data(token: str) -> list:
-    data = base64.b64decode(token.encode()).decode()
-    return json.loads(data)
+    encoded_payload, signature = token.rsplit(".", 1)
+    payload = base64.urlsafe_b64decode(encoded_payload.encode())
+    expected = hmac.new(
+        settings.secret_key.encode(),
+        payload,
+        hashlib.sha256,
+    ).hexdigest()
+    if not hmac.compare_digest(signature, expected):
+        raise ValueError("Invalid import token signature")
+    return json.loads(payload.decode())

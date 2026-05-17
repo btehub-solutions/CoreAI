@@ -82,10 +82,13 @@ if app and not _startup_error:
         @app.exception_handler(Exception)
         async def global_exception_handler(request: Request, exc: Exception):
             err_trace = traceback.format_exc()
-            print(f"GLOBAL ERROR: {err_trace}")
+            logger.exception(
+                "Unhandled request error",
+                extra={"request_id": getattr(request.state, "request_id", None)},
+            )
             
             # Use 'detail' for frontend compatibility
-            message = str(exc)
+            message = str(exc) if settings.debug else "An unexpected error occurred."
             return JSONResponse(
                 status_code=500,
                 content={

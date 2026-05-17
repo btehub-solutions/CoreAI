@@ -33,15 +33,16 @@ if db_url:
     elif db_url.startswith("postgres://"):
         db_url = db_url.replace("postgres://", "postgresql+asyncpg://", 1)
 
+    # Add prepared_statement_cache_size=0 to disable caching for PgBouncer
+    if db_url.startswith("postgresql+asyncpg"):
+        separator = "&" if "?" in db_url else "?"
+        db_url = f"{db_url}{separator}prepared_statement_cache_size=0"
+
 if db_url:
     engine = create_async_engine(
         db_url,
         echo=settings.debug,
         poolclass=_pool_class,
-        connect_args={
-            "statement_cache_size": 0,
-            "prepared_statement_name_func": lambda *args: None,
-        },
         **(
             {}
             if settings.is_production

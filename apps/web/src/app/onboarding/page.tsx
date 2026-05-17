@@ -212,7 +212,7 @@ export default function OnboardingPage() {
                 <div className="h-2 bg-[#1a1a1a] rounded w-4/6" />
               </div>
               <div className="h-8 bg-emerald-600/20 border border-emerald-600/30 rounded-lg flex items-center justify-center">
-                <span className="text-[10px] font-bold text-emerald-500 uppercase">See Tomorrow's Plan</span>
+                <span className="text-[10px] font-bold text-emerald-500 uppercase">See Tomorrow&apos;s Plan</span>
               </div>
             </div>
             <p className="text-xs text-gray-600 mb-8">Sent every evening at 7pm</p>
@@ -237,7 +237,7 @@ export default function OnboardingPage() {
                 onClick={() => router.push("/dashboard")}
                 className="w-full h-11 border border-[#2a2a2a] rounded-xl text-sm text-gray-400 hover:bg-[#1a1a1a] transition-colors"
               >
-                No thanks, I'll check the app
+                No thanks, I&apos;ll check the app
               </button>
             </div>
 
